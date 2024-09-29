@@ -9,6 +9,9 @@ use crate::{
     tui::Tui,
 };
 
+use log::*;
+use tui_logger::*;
+
 pub mod app;
 pub mod event;
 pub mod handler;
@@ -18,6 +21,8 @@ pub mod ui;
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
+    init_logger(LevelFilter::Trace).unwrap();
+    set_default_level(LevelFilter::Trace);
     // Create an application.
     let mut app = App::new();
 

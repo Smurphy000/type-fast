@@ -16,6 +16,8 @@ pub struct App {
     /// Is the application running?
     pub running: bool,
     pub current_words: Vec<String>,
+    pub current_letter: Option<char>,
+    pub input_letter: Option<char>,
 }
 
 impl Default for App {
@@ -28,6 +30,8 @@ impl Default for App {
                 "a".to_string(),
                 "test".to_string(),
             ],
+            current_letter: None,
+            input_letter: None,
         }
     }
 }
