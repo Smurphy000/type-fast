@@ -1,10 +1,41 @@
-use crate::app::{App, AppResult};
+use crate::app::{App, AppResult, Pages};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use log::trace;
 
 /// Handles the key events and updates the state of [`App`].
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
     // todo may want to define this globally
+
+    match app.current_page {
+        Pages::Menu => handle_menu(key_event, app),
+        Pages::Typing => handle_typing(key_event, app),
+        Pages::Stats => todo!(),
+        Pages::Historical => todo!(),
+    }
+
+    Ok(())
+}
+
+fn handle_menu(key_event: KeyEvent, app: &mut App) {
+    match key_event.code {
+        // Exit application on `ESC` or `q`
+        KeyCode::Esc => {
+            app.quit();
+        }
+
+        KeyCode::Char('h') | KeyCode::Left => app.menu.select_none(),
+        KeyCode::Char('j') | KeyCode::Down => app.menu.select_next(),
+        KeyCode::Char('k') | KeyCode::Up => app.menu.select_previous(),
+        KeyCode::Char('g') | KeyCode::Home => app.menu.select_first(),
+        KeyCode::Char('G') | KeyCode::End => app.menu.select_last(),
+        KeyCode::Enter => app.select_menu_option(),
+
+        _ => {}
+    }
+}
+
+fn handle_typing(key_event: KeyEvent, app: &mut App) {
+    // TODO could extend alphabet to include other necessary characters
     let alphabet = (b'A'..=b'z') // Start as u8
         .filter_map(|c| {
             let c = c as char; // Convert to char
@@ -15,6 +46,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             } // Filter only alphabetic chars
         })
         .collect::<Vec<_>>();
+
     match key_event.code {
         // Exit application on `ESC` or `q`
         KeyCode::Esc => {
@@ -26,15 +58,20 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         //         app.quit();
         //     }
         // }
+        KeyCode::Char(' ') => {
+            app.input_letter.push(' ');
+        }
+
         KeyCode::Char(ch) => {
             if alphabet.contains(&ch) {
                 // todo all input from user for all alphabetic character while in typing mode.
                 trace!(target:"Input", "User input char {}", ch);
-                app.input_letter = Some(ch);
+
+                app.input_letter.push(ch);
             }
         }
+
         // Other handlers you could add here.
         _ => {}
     }
-    Ok(())
 }
