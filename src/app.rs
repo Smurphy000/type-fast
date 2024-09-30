@@ -1,75 +1,11 @@
-use std::{error, fmt};
+mod pages;
 
-use ratatui::widgets::{ListItem, ListState};
+pub use pages::{Menu, MenuOptions, Pages};
+
+use std::error;
 
 /// Application result type.
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
-
-#[derive(Debug)]
-pub enum Pages {
-    Menu,
-    Typing,
-    Stats,
-    Historical,
-}
-
-#[derive(Debug)]
-pub enum MenuOptions {
-    Type,
-    Options,
-    Credits,
-    Quit,
-}
-
-impl fmt::Display for MenuOptions {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            MenuOptions::Type => write!(f, "Type"),
-            MenuOptions::Options => write!(f, "Options"),
-            MenuOptions::Credits => write!(f, "Credits"),
-            MenuOptions::Quit => write!(f, "Quit"),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct Menu {
-    pub options: Vec<MenuOptions>,
-    pub current_selection: ListState,
-}
-
-impl Menu {
-    fn new() -> Self {
-        Self {
-            options: vec![
-                MenuOptions::Type,
-                MenuOptions::Options,
-                MenuOptions::Credits,
-                MenuOptions::Quit,
-            ],
-            current_selection: ListState::default(),
-        }
-    }
-
-    pub fn select_none(&mut self) {
-        self.current_selection.select(None);
-    }
-
-    pub fn select_next(&mut self) {
-        self.current_selection.select_next();
-    }
-    pub fn select_previous(&mut self) {
-        self.current_selection.select_previous();
-    }
-
-    pub fn select_first(&mut self) {
-        self.current_selection.select_first();
-    }
-
-    pub fn select_last(&mut self) {
-        self.current_selection.select_last();
-    }
-}
 
 /// Application.
 #[derive(Debug)]
@@ -79,8 +15,8 @@ pub struct App {
     pub current_page: Pages,
     pub menu: Menu,
     pub current_words: Vec<String>,
-    pub current_letter: Option<char>,
-    pub input_letter: Option<char>,
+    pub current_letter: String,
+    pub input_letter: String,
 }
 
 impl Default for App {
@@ -95,8 +31,8 @@ impl Default for App {
                 "a".to_string(),
                 "test".to_string(),
             ],
-            current_letter: None,
-            input_letter: None,
+            current_letter: String::from(""),
+            input_letter: String::from(""),
         }
     }
 }

@@ -35,6 +35,7 @@ fn handle_menu(key_event: KeyEvent, app: &mut App) {
 }
 
 fn handle_typing(key_event: KeyEvent, app: &mut App) {
+    // TODO could extend alphabet to include other necessary characters
     let alphabet = (b'A'..=b'z') // Start as u8
         .filter_map(|c| {
             let c = c as char; // Convert to char
@@ -57,13 +58,19 @@ fn handle_typing(key_event: KeyEvent, app: &mut App) {
         //         app.quit();
         //     }
         // }
+        KeyCode::Char(' ') => {
+            app.input_letter.push(' ');
+        }
+
         KeyCode::Char(ch) => {
             if alphabet.contains(&ch) {
                 // todo all input from user for all alphabetic character while in typing mode.
                 trace!(target:"Input", "User input char {}", ch);
-                app.input_letter = Some(ch);
+
+                app.input_letter.push(ch);
             }
         }
+
         // Other handlers you could add here.
         _ => {}
     }
