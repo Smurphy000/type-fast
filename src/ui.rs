@@ -1,9 +1,14 @@
+use std::vec;
+
+use log::trace;
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Constraint, Layout, Rect},
     style::{Color, Style, Stylize},
-    text::{Span, Text},
-    widgets::{Block, BorderType, HighlightSpacing, List, ListItem, Paragraph, StatefulWidget},
+    text::{Line, Span, Text},
+    widgets::{
+        Block, BorderType, HighlightSpacing, List, ListItem, Padding, Paragraph, StatefulWidget,
+    },
     Frame,
 };
 use tui_logger::{TuiLoggerLevelOutput, TuiLoggerWidget};
@@ -67,22 +72,16 @@ fn render_menu(frame: &mut Frame, app: &mut App, smart_area: Rect, buf: &mut Buf
 }
 
 fn render_typing(frame: &mut Frame, app: &mut App, smart_area: Rect) {
-    // need to display the typing test string
-    // this also needs to able to color the string based on if the letter
-    // has been typed correctly, incorrectly, or not at all
-
     let [top_area, bottom_area] =
         { Layout::vertical([Constraint::Fill(50), Constraint::Fill(50)]).areas(smart_area) };
-    let text_string = String::from(app.current_words.join(" "));
-    let text = Text::raw(text_string);
 
     frame.render_widget(
-        Paragraph::new(text)
+        Paragraph::new(app.typing.text.clone())
             .block(
                 Block::bordered()
-                    .title("Template")
-                    .title_alignment(Alignment::Center)
-                    .border_type(BorderType::Rounded),
+                    .hidden()
+                    .padding(Padding::new(0, 0, top_area.height / 2, 0))
+                    .title_alignment(Alignment::Center), // .border_type(BorderType::Rounded),
             )
             .style(Style::default().fg(Color::Cyan).bg(Color::Black))
             .centered(),

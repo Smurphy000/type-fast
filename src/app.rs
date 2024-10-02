@@ -1,30 +1,32 @@
 mod pages;
 
-pub use pages::{Menu, MenuOptions, Pages};
+pub use pages::{Menu, MenuOptions, Pages, Typing};
 
-use std::error;
+use std::{error, vec};
 
 /// Application result type.
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 
 /// Application.
 #[derive(Debug)]
-pub struct App {
+pub struct App<'a> {
     /// Is the application running?
     pub running: bool,
     pub current_page: Pages,
     pub menu: Menu,
+    pub typing: Typing<'a>,
     pub current_words: Vec<String>,
     pub current_letter: String,
     pub input_letter: String,
 }
 
-impl Default for App {
+impl<'a> Default for App<'a> {
     fn default() -> Self {
         Self {
             running: true,
             current_page: Pages::Menu,
             menu: Menu::new(),
+            typing: Typing::new(vec![]),
             current_words: vec![
                 "this".to_string(),
                 "is".to_string(),
@@ -37,7 +39,7 @@ impl Default for App {
     }
 }
 
-impl App {
+impl<'a> App<'a> {
     /// Constructs a new instance of [`App`].
     pub fn new() -> Self {
         Self::default()
@@ -56,7 +58,7 @@ impl App {
             Some(x) => {
                 let selected = &self.menu.options[x];
                 match selected {
-                    MenuOptions::Type => self.current_page = Pages::Typing,
+                    MenuOptions::Type => self.setup_typing(),
                     MenuOptions::Options => todo!(),
                     MenuOptions::Credits => todo!(),
                     MenuOptions::Quit => todo!(),
@@ -64,5 +66,16 @@ impl App {
             }
             None => todo!(),
         }
+    }
+
+    fn setup_typing(&mut self) {
+        self.current_page = Pages::Typing;
+        self.typing = Typing::new(vec![
+            't', 'h', 'i', 's', '•', 'i', 's', '•', 'a', '•', 't', 'e', 's', 't',
+        ]);
+    }
+
+    pub fn new_prompt(&mut self) {
+        self.setup_typing();
     }
 }

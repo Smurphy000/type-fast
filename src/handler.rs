@@ -18,7 +18,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
 
 fn handle_menu(key_event: KeyEvent, app: &mut App) {
     match key_event.code {
-        // Exit application on `ESC` or `q`
+        // Exit application on `ESC`
         KeyCode::Esc => {
             app.quit();
         }
@@ -47,18 +47,16 @@ fn handle_typing(key_event: KeyEvent, app: &mut App) {
         })
         .collect::<Vec<_>>();
 
+    let mut prompt_complete = false;
     match key_event.code {
-        // Exit application on `ESC` or `q`
+        // Exit application on `ESC`
         KeyCode::Esc => {
             app.quit();
         }
-        // Exit application on `Ctrl-C`
-        // KeyCode::Char('c') | KeyCode::Char('C') => {
-        //     if key_event.modifiers == KeyModifiers::CONTROL {
-        //         app.quit();
-        //     }
-        // }
+
         KeyCode::Char(' ') => {
+            prompt_complete = app.typing.input('•');
+
             app.input_letter.push(' ');
         }
 
@@ -66,12 +64,17 @@ fn handle_typing(key_event: KeyEvent, app: &mut App) {
             if alphabet.contains(&ch) {
                 // todo all input from user for all alphabetic character while in typing mode.
                 trace!(target:"Input", "User input char {}", ch);
-
+                prompt_complete = app.typing.input(ch);
                 app.input_letter.push(ch);
             }
         }
 
         // Other handlers you could add here.
         _ => {}
+    }
+
+    app.typing.construct_text();
+    if prompt_complete {
+        app.new_prompt();
     }
 }
