@@ -1,14 +1,9 @@
-use std::vec;
-
-use log::trace;
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Constraint, Layout, Rect},
     style::{Color, Style, Stylize},
-    text::{Line, Span, Text},
-    widgets::{
-        Block, BorderType, HighlightSpacing, List, ListItem, Padding, Paragraph, StatefulWidget,
-    },
+    text::Span,
+    widgets::{Block, HighlightSpacing, List, ListItem, Padding, Paragraph},
     Frame,
 };
 use tui_logger::{TuiLoggerLevelOutput, TuiLoggerWidget};
@@ -38,7 +33,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     render_logging(frame, app, smart_area, &mut buf);
 }
 
-fn render_logging(frame: &mut Frame, app: &App, smart_area: Rect, buf: &mut Buffer) {
+fn render_logging(frame: &mut Frame, _app: &App, smart_area: Rect, _buf: &mut Buffer) {
     let logger = TuiLoggerWidget::default()
         .style_error(Style::default().fg(Color::Red))
         .style_debug(Style::default().fg(Color::Green))
@@ -56,7 +51,7 @@ fn render_logging(frame: &mut Frame, app: &App, smart_area: Rect, buf: &mut Buff
     frame.render_widget(logger, smart_area)
 }
 
-fn render_menu(frame: &mut Frame, app: &mut App, smart_area: Rect, buf: &mut Buffer) {
+fn render_menu(frame: &mut Frame, app: &mut App, smart_area: Rect, _buf: &mut Buffer) {
     let list_items: Vec<ListItem> = app
         .menu
         .options
@@ -89,8 +84,9 @@ fn render_typing(frame: &mut Frame, app: &mut App, smart_area: Rect) {
     );
 
     // currently displaying typed text
+    let typing_string: String = app.typing.typing.iter().collect();
     frame.render_widget(
-        Span::raw(app.input_letter.clone()).style(Style::new().green()),
+        Span::raw(typing_string).style(Style::new().green()),
         bottom_area,
     );
 }

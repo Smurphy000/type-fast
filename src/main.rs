@@ -1,6 +1,5 @@
-use std::io;
-
 use ratatui::{backend::CrosstermBackend, Terminal};
+use std::io;
 
 use crate::{
     app::{App, AppResult},

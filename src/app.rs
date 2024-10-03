@@ -2,7 +2,7 @@ mod pages;
 
 pub use pages::{Menu, MenuOptions, Pages, Typing};
 
-use std::{error, vec};
+use std::error;
 
 /// Application result type.
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
@@ -15,9 +15,6 @@ pub struct App<'a> {
     pub current_page: Pages,
     pub menu: Menu,
     pub typing: Typing<'a>,
-    pub current_words: Vec<String>,
-    pub current_letter: String,
-    pub input_letter: String,
 }
 
 impl<'a> Default for App<'a> {
@@ -26,15 +23,7 @@ impl<'a> Default for App<'a> {
             running: true,
             current_page: Pages::Menu,
             menu: Menu::new(),
-            typing: Typing::new(vec![]),
-            current_words: vec![
-                "this".to_string(),
-                "is".to_string(),
-                "a".to_string(),
-                "test".to_string(),
-            ],
-            current_letter: String::from(""),
-            input_letter: String::from(""),
+            typing: Typing::new(),
         }
     }
 }
@@ -70,9 +59,7 @@ impl<'a> App<'a> {
 
     fn setup_typing(&mut self) {
         self.current_page = Pages::Typing;
-        self.typing = Typing::new(vec![
-            't', 'h', 'i', 's', '•', 'i', 's', '•', 'a', '•', 't', 'e', 's', 't',
-        ]);
+        self.typing = Typing::new();
     }
 
     pub fn new_prompt(&mut self) {

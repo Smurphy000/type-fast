@@ -1,5 +1,5 @@
 use crate::app::{App, AppResult, Pages};
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{KeyCode, KeyEvent};
 use log::trace;
 
 /// Handles the key events and updates the state of [`App`].
@@ -56,8 +56,6 @@ fn handle_typing(key_event: KeyEvent, app: &mut App) {
 
         KeyCode::Char(' ') => {
             prompt_complete = app.typing.input('•');
-
-            app.input_letter.push(' ');
         }
 
         KeyCode::Char(ch) => {
@@ -65,7 +63,6 @@ fn handle_typing(key_event: KeyEvent, app: &mut App) {
                 // todo all input from user for all alphabetic character while in typing mode.
                 trace!(target:"Input", "User input char {}", ch);
                 prompt_complete = app.typing.input(ch);
-                app.input_letter.push(ch);
             }
         }
 

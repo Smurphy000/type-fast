@@ -1,22 +1,13 @@
-use log::trace;
+use rand::{distributions::Uniform, prelude::Distribution};
 use ratatui::{
     style::Stylize,
     text::{Line, Span, Text},
 };
 
-#[derive(Debug)]
-pub struct Typing<'a> {
-    // position in the phrase
-    position: usize,
-    // current sequence of typed characters by the user
-    pub typing: Vec<char>,
-    // phrase the user is attempting to type
-    phrase: Vec<char>,
-    // state of each typed character position, used for rendering logic
-    state: Vec<TypingLetter>, // this might need to be a custom type
-    // materialized text for the UI to display, computed on any new input
-    pub text: Text<'a>,
-}
+use serde::{Deserialize, Serialize};
+use std::{fs, sync::OnceLock};
+
+static LANGUAGE: OnceLock<LanguagePrompt> = OnceLock::new();
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 enum LetterState {
@@ -41,8 +32,73 @@ impl TypingLetter {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, Default)]
+struct LanguagePrompt {
+    name: String,
+    #[serde(rename = "noLazyMode")]
+    no_lazy_mode: bool,
+    #[serde(rename = "orderedByFrequency")]
+    ordered_by_frequency: bool,
+    words: Vec<String>,
+}
+
+impl LanguagePrompt {
+    // this object will be created via serde
+    // once the words are available the caller will
+    // want to generate a random subset to call the prompt
+    // we will convert the strings into a sequence of characters
+    // TODO
+    pub fn generate(&self, word_count: u32) -> Vec<char> {
+        let mut rng = rand::thread_rng();
+        let uni = Uniform::from(0..10_000);
+        // let mut words = vec![];
+        let mut chars = vec![];
+
+        for _ in 0..word_count {
+            let idx = uni.sample(&mut rng);
+            let word = self.words[idx].clone();
+
+            let _: Vec<_> = word.chars().map(|c| chars.push(c)).collect();
+            chars.push('•');
+        }
+
+        // for each word
+        // push each char
+        // push space at end of word
+        // except last word
+        if chars.last().unwrap() == &'•' {
+            chars.pop();
+        }
+        chars
+    }
+}
+
+#[derive(Debug)]
+pub struct Typing<'a> {
+    // position in the phrase
+    position: usize,
+    // current sequence of typed characters by the user
+    pub typing: Vec<char>,
+    // phrase the user is attempting to type
+    phrase: Vec<char>,
+    // state of each typed character position, used for rendering logic
+    state: Vec<TypingLetter>, // this might need to be a custom type
+    // materialized text for the UI to display, computed on any new input
+    pub text: Text<'a>,
+
+    language: &'a LanguagePrompt,
+}
+
 impl<'a> Typing<'a> {
-    pub fn new(phrase: Vec<char>) -> Self {
+    pub fn new() -> Self {
+        let l = LANGUAGE.get_or_init(|| {
+            let data =
+                fs::read_to_string("./src/language/english_10k.json").expect("issue reading file");
+
+            serde_json::from_str(&data).expect("JSON format error")
+        });
+
+        let phrase = l.generate(10);
         let state: Vec<TypingLetter> = phrase
             .iter()
             .enumerate()
@@ -72,20 +128,17 @@ impl<'a> Typing<'a> {
             phrase: phrase,
             state: state,
             text: text,
+            language: l,
         }
     }
 
     // take in the current user input
-    // TODO, refactor, but after we determine if the data format works for the ui
     pub fn input(&mut self, c: char) -> bool {
-        // this can cause a panic if we exceed the end of the phrase
-        // todo add some logging
         self.typing.push(c);
 
         self.character_matching(c);
-        trace!(target: "typing", "{:?}, {:?}", self.position, self.phrase.len());
+        // trace!(target: "typing", "{:?}, {:?}", self.position, self.phrase.len());
         if self.position >= self.phrase.len() {
-            // todo return something here to notify end of typing
             return true;
         }
         false
@@ -134,16 +187,9 @@ impl<'a> Typing<'a> {
         }
 
         let text = Text::from(Line::from(spans));
-        trace!(target: "Typing", "text: {:?}", text);
         self.text = text;
     }
 }
-
-// String for what the user should be typing
-// Need to track the current character the user should type, for comparison
-// Need to get the currently pressed character, and store all user inputs
-// then we need to construct contiguous sections of correct, incorrect, and untyped character
-// to render to the screen
 
 #[cfg(test)]
 mod tests {
@@ -151,7 +197,7 @@ mod tests {
     use super::*;
     #[test]
     fn test_insert_when_first_of_phrase_is_correct() {
-        let mut t = Typing::new(vec!['t', 'e', 's', 't']);
+        let mut t = Typing::new();
 
         t.input('t');
 
@@ -160,7 +206,7 @@ mod tests {
 
     #[test]
     fn test_insert_when_first_of_phrase_is_incorrect() {
-        let mut t = Typing::new(vec!['t', 'e', 's', 't']);
+        let mut t = Typing::new();
 
         t.input('t');
         t.input('c');
