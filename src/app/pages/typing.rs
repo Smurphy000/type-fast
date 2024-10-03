@@ -112,6 +112,7 @@ impl<'a> Typing<'a> {
         }
     }
 
+    //
     fn setup_state(phrase: &Vec<char>) -> Vec<TypingLetter> {
         phrase
             .iter()

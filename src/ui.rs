@@ -6,6 +6,7 @@ use ratatui::{
     widgets::{Block, HighlightSpacing, List, ListItem, Padding, Paragraph},
     Frame,
 };
+use tui_big_text::BigText;
 use tui_logger::{TuiLoggerLevelOutput, TuiLoggerWidget};
 
 use crate::app::{App, Pages};
@@ -33,6 +34,8 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     render_logging(frame, app, smart_area, &mut buf);
 }
 
+/// render logging information
+/// this can be enabled via passing in settings
 fn render_logging(frame: &mut Frame, _app: &App, smart_area: Rect, _buf: &mut Buffer) {
     let logger = TuiLoggerWidget::default()
         .style_error(Style::default().fg(Color::Red))
@@ -51,7 +54,14 @@ fn render_logging(frame: &mut Frame, _app: &App, smart_area: Rect, _buf: &mut Bu
     frame.render_widget(logger, smart_area)
 }
 
+//  TODO center menu
 fn render_menu(frame: &mut Frame, app: &mut App, smart_area: Rect, _buf: &mut Buffer) {
+    // let [smart_area] = Layout::horizontal([Constraint::Fill(100)])
+    //     .flex(ratatui::layout::Flex::Center)
+    //     .areas(smart_area);
+    let [top_area, bottom_area] =
+        { Layout::vertical([Constraint::Fill(30), Constraint::Fill(70)]).areas(smart_area) };
+
     let list_items: Vec<ListItem> = app
         .menu
         .options
@@ -63,7 +73,15 @@ fn render_menu(frame: &mut Frame, app: &mut App, smart_area: Rect, _buf: &mut Bu
         .highlight_symbol(">")
         .highlight_spacing(HighlightSpacing::Always);
 
-    frame.render_stateful_widget(list, smart_area, &mut app.menu.current_selection);
+    frame.render_widget(
+        BigText::builder()
+            .pixel_size(tui_big_text::PixelSize::Full)
+            .style(Style::new().white())
+            .lines(vec!["Type Fast!".white().into()])
+            .build(),
+        top_area,
+    );
+    frame.render_stateful_widget(list, bottom_area, &mut app.menu.current_selection);
 }
 
 fn render_typing(frame: &mut Frame, app: &mut App, smart_area: Rect) {
