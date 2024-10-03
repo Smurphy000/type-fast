@@ -50,7 +50,7 @@ impl LanguagePrompt {
     // TODO
     pub fn generate(&self, word_count: u32) -> Vec<char> {
         let mut rng = rand::thread_rng();
-        let uni = Uniform::from(0..10_000);
+        let uni = Uniform::from(0..self.words.len());
         // let mut words = vec![];
         let mut chars = vec![];
 
@@ -99,29 +99,9 @@ impl<'a> Typing<'a> {
         });
 
         let phrase = l.generate(10);
-        let state: Vec<TypingLetter> = phrase
-            .iter()
-            .enumerate()
-            .map(|(i, x)| TypingLetter {
-                state: LetterState::Unpressed,
-                value: *x,
-                position: i,
-            })
-            .collect();
+        let state: Vec<TypingLetter> = Self::setup_state(&phrase);
 
-        let spans: Vec<Span> = state
-            .clone()
-            .into_iter()
-            .enumerate()
-            .map(|(i, x)| {
-                if i == 0 {
-                    Span::raw(x.value.to_string()).gray().underlined()
-                } else {
-                    Span::raw(x.value.to_string()).gray()
-                }
-            })
-            .collect();
-        let text = Text::from(Line::from(spans));
+        let text = Self::setup_text(state.clone());
         Self {
             position: 0,
             typing: vec![],
@@ -130,6 +110,33 @@ impl<'a> Typing<'a> {
             text: text,
             language: l,
         }
+    }
+
+    fn setup_state(phrase: &Vec<char>) -> Vec<TypingLetter> {
+        phrase
+            .iter()
+            .enumerate()
+            .map(|(i, x)| TypingLetter {
+                state: LetterState::Unpressed,
+                value: *x,
+                position: i,
+            })
+            .collect()
+    }
+
+    fn setup_text(state: Vec<TypingLetter>) -> Text<'a> {
+        let spans: Vec<Span> = state
+            .into_iter()
+            .enumerate()
+            .map(|(i, x)| {
+                if i == 0 {
+                    Span::raw(x.value.to_string()).white().underlined()
+                } else {
+                    Span::raw(x.value.to_string()).white()
+                }
+            })
+            .collect();
+        Text::from(Line::from(spans))
     }
 
     // take in the current user input
@@ -170,12 +177,12 @@ impl<'a> Typing<'a> {
         // TODO would prefer not to clone here
         for i in self.state.clone().into_iter() {
             match i.state {
-                LetterState::Unpressed => spans.push(Span::raw(i.value.to_string()).gray()),
+                LetterState::Unpressed => spans.push(Span::raw(i.value.to_string()).white()),
                 LetterState::Incorrect => {
                     spans.push(Span::raw(i.value.to_string()).red());
                 }
                 LetterState::Correct => {
-                    spans.push(Span::raw(i.value.to_string()).green());
+                    spans.push(Span::raw(i.value.to_string()).dark_gray());
                 }
             }
         }

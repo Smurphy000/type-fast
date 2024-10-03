@@ -78,7 +78,7 @@ fn render_typing(frame: &mut Frame, app: &mut App, smart_area: Rect) {
                     .padding(Padding::new(0, 0, top_area.height / 2, 0))
                     .title_alignment(Alignment::Center), // .border_type(BorderType::Rounded),
             )
-            .style(Style::default().fg(Color::Cyan).bg(Color::Black))
+            .style(Style::default().fg(Color::Black).bg(Color::Black))
             .centered(),
         top_area,
     );
