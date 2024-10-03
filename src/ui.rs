@@ -2,10 +2,11 @@ use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Constraint, Layout, Rect},
     style::{Color, Style, Stylize},
-    text::{Span, Text},
-    widgets::{Block, BorderType, HighlightSpacing, List, ListItem, Paragraph, StatefulWidget},
+    text::Span,
+    widgets::{Block, HighlightSpacing, List, ListItem, Padding, Paragraph},
     Frame,
 };
+use tui_big_text::BigText;
 use tui_logger::{TuiLoggerLevelOutput, TuiLoggerWidget};
 
 use crate::app::{App, Pages};
@@ -33,7 +34,9 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     render_logging(frame, app, smart_area, &mut buf);
 }
 
-fn render_logging(frame: &mut Frame, app: &App, smart_area: Rect, buf: &mut Buffer) {
+/// render logging information
+/// this can be enabled via passing in settings
+fn render_logging(frame: &mut Frame, _app: &App, smart_area: Rect, _buf: &mut Buffer) {
     let logger = TuiLoggerWidget::default()
         .style_error(Style::default().fg(Color::Red))
         .style_debug(Style::default().fg(Color::Green))
@@ -51,7 +54,14 @@ fn render_logging(frame: &mut Frame, app: &App, smart_area: Rect, buf: &mut Buff
     frame.render_widget(logger, smart_area)
 }
 
-fn render_menu(frame: &mut Frame, app: &mut App, smart_area: Rect, buf: &mut Buffer) {
+//  TODO center menu
+fn render_menu(frame: &mut Frame, app: &mut App, smart_area: Rect, _buf: &mut Buffer) {
+    // let [smart_area] = Layout::horizontal([Constraint::Fill(100)])
+    //     .flex(ratatui::layout::Flex::Center)
+    //     .areas(smart_area);
+    let [top_area, bottom_area] =
+        { Layout::vertical([Constraint::Fill(30), Constraint::Fill(70)]).areas(smart_area) };
+
     let list_items: Vec<ListItem> = app
         .menu
         .options
@@ -63,35 +73,38 @@ fn render_menu(frame: &mut Frame, app: &mut App, smart_area: Rect, buf: &mut Buf
         .highlight_symbol(">")
         .highlight_spacing(HighlightSpacing::Always);
 
-    frame.render_stateful_widget(list, smart_area, &mut app.menu.current_selection);
+    frame.render_widget(
+        BigText::builder()
+            .pixel_size(tui_big_text::PixelSize::Full)
+            .style(Style::new().white())
+            .lines(vec!["Type Fast!".white().into()])
+            .build(),
+        top_area,
+    );
+    frame.render_stateful_widget(list, bottom_area, &mut app.menu.current_selection);
 }
 
 fn render_typing(frame: &mut Frame, app: &mut App, smart_area: Rect) {
-    // need to display the typing test string
-    // this also needs to able to color the string based on if the letter
-    // has been typed correctly, incorrectly, or not at all
-
     let [top_area, bottom_area] =
         { Layout::vertical([Constraint::Fill(50), Constraint::Fill(50)]).areas(smart_area) };
-    let text_string = String::from(app.current_words.join(" "));
-    let text = Text::raw(text_string);
 
     frame.render_widget(
-        Paragraph::new(text)
+        Paragraph::new(app.typing.text.clone())
             .block(
                 Block::bordered()
-                    .title("Template")
-                    .title_alignment(Alignment::Center)
-                    .border_type(BorderType::Rounded),
+                    .hidden()
+                    .padding(Padding::new(0, 0, top_area.height / 2, 0))
+                    .title_alignment(Alignment::Center), // .border_type(BorderType::Rounded),
             )
-            .style(Style::default().fg(Color::Cyan).bg(Color::Black))
+            .style(Style::default().fg(Color::Black).bg(Color::Black))
             .centered(),
         top_area,
     );
 
     // currently displaying typed text
+    let typing_string: String = app.typing.typing.iter().collect();
     frame.render_widget(
-        Span::raw(app.input_letter.clone()).style(Style::new().green()),
+        Span::raw(typing_string).style(Style::new().green()),
         bottom_area,
     );
 }

@@ -31,6 +31,9 @@ pub struct Menu {
 
 impl Menu {
     pub fn new() -> Self {
+        // initialize state as the first item in the menu
+        let mut state = ListState::default();
+        state.select_first();
         Self {
             options: vec![
                 MenuOptions::Type,
@@ -38,7 +41,7 @@ impl Menu {
                 MenuOptions::Credits,
                 MenuOptions::Quit,
             ],
-            current_selection: ListState::default(),
+            current_selection: state,
         }
     }
 
