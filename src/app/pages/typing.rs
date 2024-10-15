@@ -5,7 +5,11 @@ use ratatui::{
 };
 
 use serde::{Deserialize, Serialize};
-use std::{fs, sync::OnceLock};
+use std::{
+    fs,
+    sync::OnceLock,
+    time::{Duration, Instant},
+};
 
 static LANGUAGE: OnceLock<LanguagePrompt> = OnceLock::new();
 
@@ -15,6 +19,7 @@ enum LetterState {
     Incorrect,
     Correct,
 }
+
 #[derive(Debug, Clone, Copy)]
 struct TypingLetter {
     state: LetterState,
@@ -87,6 +92,9 @@ pub struct Typing<'a> {
     pub text: Text<'a>,
 
     language: &'a LanguagePrompt,
+
+    start_time: Instant,
+    duration: Duration,
 }
 
 impl<'a> Typing<'a> {
@@ -109,7 +117,18 @@ impl<'a> Typing<'a> {
             state: state,
             text: text,
             language: l,
+            start_time: Instant::now(),
+            duration: Duration::default(),
         }
+    }
+
+    // reset fields with current prompt
+    pub fn reset(&mut self) {
+        self.position = 0;
+        self.typing = vec![];
+        self.state = Self::setup_state(&self.phrase);
+        self.text = Self::setup_text(self.state.clone());
+        self.start_time = Instant::now()
     }
 
     //
@@ -142,11 +161,16 @@ impl<'a> Typing<'a> {
 
     // take in the current user input
     pub fn input(&mut self, c: char) -> bool {
+        // overwrite start_time if typing is empty
+        if self.typing.is_empty() {
+            self.start_time = Instant::now();
+        }
         self.typing.push(c);
 
         self.character_matching(c);
-        // trace!(target: "typing", "{:?}, {:?}", self.position, self.phrase.len());
+
         if self.position >= self.phrase.len() {
+            self.duration = self.start_time.elapsed();
             return true;
         }
         false
@@ -197,6 +221,23 @@ impl<'a> Typing<'a> {
         let text = Text::from(Line::from(spans));
         self.text = text;
     }
+
+    pub fn calculate_statistics(&self) -> TypingStats {
+        let wpm = (self.typing.len() as f32 / 5.0) / (self.duration.as_secs_f32() / 60 as f32);
+        let acc = self.phrase.len() as f32 / self.typing.len() as f32;
+        TypingStats {
+            wpm: wpm,
+            accuracy: acc * 100 as f32,
+            awpm: wpm * acc,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct TypingStats {
+    pub wpm: f32,
+    pub accuracy: f32,
+    pub awpm: f32,
 }
 
 #[cfg(test)]
