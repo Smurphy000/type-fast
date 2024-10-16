@@ -4,13 +4,12 @@ use log::trace;
 
 /// Handles the key events and updates the state of [`App`].
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
-    // todo may want to define this globally
-
     match app.current_page {
         Pages::Menu => handle_menu(key_event, app),
         Pages::Typing => handle_typing(key_event, app),
+        Pages::Pause => handle_pause(key_event, app),
         Pages::Stats => todo!(),
-        Pages::Historical => todo!(),
+        // Pages::Historical => todo!(),
     }
 
     Ok(())
@@ -33,6 +32,22 @@ fn handle_menu(key_event: KeyEvent, app: &mut App) {
         _ => {}
     }
 }
+fn handle_pause(key_event: KeyEvent, app: &mut App) {
+    match key_event.code {
+        // Exit application on `ESC`
+        // KeyCode::Esc => {
+        //     app.quit();
+        // }
+        KeyCode::Char('h') | KeyCode::Left => app.pause_popup.select_none(),
+        KeyCode::Char('j') | KeyCode::Down => app.pause_popup.select_next(),
+        KeyCode::Char('k') | KeyCode::Up => app.pause_popup.select_previous(),
+        KeyCode::Char('g') | KeyCode::Home => app.pause_popup.select_first(),
+        KeyCode::Char('G') | KeyCode::End => app.pause_popup.select_last(),
+        KeyCode::Enter => app.select_pause_option(),
+
+        _ => {}
+    }
+}
 
 fn handle_typing(key_event: KeyEvent, app: &mut App) {
     // TODO could extend alphabet to include other necessary characters
@@ -51,7 +66,7 @@ fn handle_typing(key_event: KeyEvent, app: &mut App) {
     match key_event.code {
         // Exit application on `ESC`
         KeyCode::Esc => {
-            app.quit();
+            app.pause();
         }
 
         KeyCode::Char(' ') => {
@@ -64,6 +79,15 @@ fn handle_typing(key_event: KeyEvent, app: &mut App) {
                 trace!(target:"Input", "User input char {}", ch);
                 prompt_complete = app.typing.input(ch);
             }
+        }
+
+        // restart current prompt
+        KeyCode::Left => {
+            app.typing.reset();
+        }
+        // skip to new prompt
+        KeyCode::Right => {
+            app.new_prompt();
         }
 
         // Other handlers you could add here.

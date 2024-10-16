@@ -3,15 +3,19 @@ use std::io;
 
 use crate::{
     app::{App, AppResult},
+    cli::Cli,
     event::{Event, EventHandler},
     handler::handle_key_events,
     tui::Tui,
 };
 
+use clap::Parser;
+
 use log::*;
 use tui_logger::*;
 
 pub mod app;
+pub mod cli;
 pub mod event;
 pub mod handler;
 pub mod tui;
@@ -21,6 +25,11 @@ pub mod ui;
 async fn main() -> AppResult<()> {
     init_logger(LevelFilter::Trace).unwrap();
     set_default_level(LevelFilter::Trace);
+
+    let cli = Cli::parse();
+
+    trace!(target: "main", "skip {}", cli.skip_menu);
+
     // Create an application.
     let mut app = App::new();
 
