@@ -4,6 +4,10 @@ Terminal typing test to help you improve on typing speed and accuracy and runs i
 
 Meant to be lightweight, fast, and customizable.
 
+## Demo
+
+https://github.com/user-attachments/assets/085d8074-08b3-4f4d-a502-938a0304f924
+
 ## Keybindings
 
 | Key     | Action                | Location      |
