@@ -6,8 +6,6 @@ use ratatui::widgets::ListState;
 #[derive(Debug)]
 pub enum MenuOptions {
     Type,
-    Options,
-    Credits,
     Quit,
 }
 
@@ -16,8 +14,6 @@ impl fmt::Display for MenuOptions {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             MenuOptions::Type => write!(f, "Type"),
-            MenuOptions::Options => write!(f, "Options"),
-            MenuOptions::Credits => write!(f, "Credits"),
             MenuOptions::Quit => write!(f, "Quit"),
         }
     }
@@ -35,12 +31,7 @@ impl Menu {
         let mut state = ListState::default();
         state.select_first();
         Self {
-            options: vec![
-                MenuOptions::Type,
-                MenuOptions::Options,
-                MenuOptions::Credits,
-                MenuOptions::Quit,
-            ],
+            options: vec![MenuOptions::Type, MenuOptions::Quit],
             current_selection: state,
         }
     }

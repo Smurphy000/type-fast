@@ -1,5 +1,5 @@
 [package]
-name = "attt"
+name = "type-fast"
 version = "0.1.0"
 authors = ["Conner Murphy <connermurphy74@gmail.com>"]
 license = "MIT"
@@ -17,3 +17,6 @@ serde_json = "1.0.128"
 rand = "0.8.5"
 tui-big-text = "0.6.0"
 clap = { version = "4.5.19", features = ["derive"] }
+rust-embed = "8.5.0"
+dirs = "5.0.1"
+toml = "0.8.19"

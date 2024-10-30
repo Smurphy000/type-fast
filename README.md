@@ -1,20 +1,36 @@
-# ATTT
+# Type Fast
 
-Another Terminal Typing Test
-
-A typing practice tool that runs in your terminal!
+Terminal typing test to help you improve on typing speed and accuracy and runs in the terminal!
 
 Meant to be lightweight, fast, and customizable.
 
-## Enhancements
+## Keybindings
 
-- clean up UI, handle for different terminal sizes
-- allow more customization for typing prompts
-  - numbers
-  - punctuation
-  - capitalization
-- cli options for configuration
-- configuration file to store preferences
+| Key     | Action                | Location      |
+| ------- | --------------------- | ------------- |
+| j       | ↑                     | Menu Nav      |
+| k       | ↓                     | Menu Nav      |
+| g       | Select First          | Menu Nav      |
+| G       | Select Last           | Menu Nav      |
+| h       | Select None           | Menu Nav      |
+| ENTER   | Select Current        | Menu Nav      |
+| ALT + 1 | Inc word count        | Typing prompt |
+| ALT + 2 | Toggle capitalization | Typing prompt |
+| ALT + 3 | Toggle punctuation    | Typing prompt |
+| ALT + 4 | Toggle Zen mode       | Typing prompt |
+| →       | Skip current prompt   | Typing prompt |
+| ←       | Reset current prompt  | Typing prompt |
+| ESC     | Pause                 | Typing prompt |
+| ESC     | Resume                | Pause Screen  |
+| q       | Return to menu        | Pause Screen  |
+
+## Remaining Work
+
+- [ ] cli option support
+- [ ] configuration file support
+- [ ] implement capitalization and puctuation into prompt generation
+- [ ] statistics tracking
+  - [ ] visualization for wpm over time
 
 ## Disclaimer
 
@@ -35,11 +51,11 @@ or
 
 or
 
-`cargo install --git <>`
+`cargo install --git <url>`
 
 ## Usage
 
-`tui-type-fast` will run the program.
+`type-fast` will run the program.
 
 ## Credits
 

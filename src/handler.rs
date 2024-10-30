@@ -1,5 +1,5 @@
 use crate::app::{App, AppResult, Pages};
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use log::trace;
 
 /// Handles the key events and updates the state of [`App`].
@@ -9,7 +9,6 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         Pages::Typing => handle_typing(key_event, app),
         Pages::Pause => handle_pause(key_event, app),
         Pages::Stats => todo!(),
-        // Pages::Historical => todo!(),
     }
 
     Ok(())
@@ -35,15 +34,13 @@ fn handle_menu(key_event: KeyEvent, app: &mut App) {
 fn handle_pause(key_event: KeyEvent, app: &mut App) {
     match key_event.code {
         // Exit application on `ESC`
-        // KeyCode::Esc => {
-        //     app.quit();
-        // }
-        KeyCode::Char('h') | KeyCode::Left => app.pause_popup.select_none(),
-        KeyCode::Char('j') | KeyCode::Down => app.pause_popup.select_next(),
-        KeyCode::Char('k') | KeyCode::Up => app.pause_popup.select_previous(),
-        KeyCode::Char('g') | KeyCode::Home => app.pause_popup.select_first(),
-        KeyCode::Char('G') | KeyCode::End => app.pause_popup.select_last(),
-        KeyCode::Enter => app.select_pause_option(),
+        KeyCode::Esc => {
+            app.unpause();
+        }
+        KeyCode::Char('q') => {
+            app.unpause();
+            app.current_page = Pages::Menu;
+        }
 
         _ => {}
     }
@@ -74,10 +71,33 @@ fn handle_typing(key_event: KeyEvent, app: &mut App) {
         }
 
         KeyCode::Char(ch) => {
-            if alphabet.contains(&ch) {
+            if (key_event.modifiers == KeyModifiers::NONE
+                || key_event.modifiers == KeyModifiers::SHIFT)
+                && alphabet.contains(&ch)
+            {
                 // todo all input from user for all alphabetic character while in typing mode.
                 trace!(target:"Input", "User input char {}", ch);
                 prompt_complete = app.typing.input(ch);
+            }
+
+            // Control modifier was not working for me in this case
+            if key_event.modifiers == KeyModifiers::ALT {
+                match ch {
+                    '1' => {
+                        app.typing.settings.borrow_mut().next_wc();
+                    }
+                    '2' => {
+                        app.typing.settings.borrow_mut().toggle_capitalization();
+                    }
+                    '3' => {
+                        app.typing.settings.borrow_mut().toggle_punctuation();
+                    }
+                    '4' => {
+                        app.typing.settings.borrow_mut().toggle_zen();
+                    }
+
+                    _ => {}
+                }
             }
         }
 

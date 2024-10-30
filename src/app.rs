@@ -3,22 +3,23 @@ mod pages;
 use log::trace;
 use pages::{
     pause::{Pause, PauseOptions},
-    typing::TypingStats,
+    typing::{PromptSettings, TypingStats},
 };
 pub use pages::{Menu, MenuOptions, Pages, Typing};
 
-use std::error;
+use std::{cell::RefCell, error, rc::Rc};
 
 /// Application result type.
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 
+// TODO we want to store the terminal size, for calculating endline cutoffs for text in the prompt
 /// Application.
 #[derive(Debug)]
 pub struct App<'a> {
-    /// Is the application running?
     pub running: bool,
     pub current_page: Pages,
     pub menu: Menu,
+    pub prompt_settings: Rc<RefCell<PromptSettings>>,
     pub typing: Typing<'a>,
     pub pause_popup: Pause,
     pub paused: bool,
@@ -27,11 +28,14 @@ pub struct App<'a> {
 
 impl<'a> Default for App<'a> {
     fn default() -> Self {
+        // todo settings should be initialized either from config or cli settings, then default
+        let settings = Rc::new(RefCell::new(PromptSettings::new()));
         Self {
             running: true,
             current_page: Pages::Menu,
             menu: Menu::new(),
-            typing: Typing::new(),
+            prompt_settings: settings.clone(),
+            typing: Typing::new(Some(settings.clone())),
             pause_popup: Pause::new(),
             paused: false,
             previous_stats: TypingStats {
@@ -68,31 +72,12 @@ impl<'a> App<'a> {
         self.current_page = Pages::Typing;
     }
 
-    pub fn select_pause_option(&mut self) {
-        match self.pause_popup.current_selection.selected() {
-            Some(x) => {
-                let selected = &self.pause_popup.options[x];
-                match selected {
-                    PauseOptions::Resume => self.unpause(),
-
-                    PauseOptions::Quit => {
-                        self.unpause();
-                        self.current_page = Pages::Menu
-                    }
-                }
-            }
-            None => todo!(),
-        }
-    }
-
     pub fn select_menu_option(&mut self) {
         match self.menu.current_selection.selected() {
             Some(x) => {
                 let selected = &self.menu.options[x];
                 match selected {
                     MenuOptions::Type => self.setup_typing(),
-                    MenuOptions::Options => todo!(),
-                    MenuOptions::Credits => todo!(),
                     MenuOptions::Quit => self.quit(),
                 }
             }
@@ -102,11 +87,13 @@ impl<'a> App<'a> {
 
     fn setup_typing(&mut self) {
         self.current_page = Pages::Typing;
-        self.typing = Typing::new();
+        self.typing = Typing::new(Some(self.typing.settings.clone()));
     }
 
     pub fn new_prompt(&mut self) {
         self.previous_stats = self.typing.calculate_statistics();
         self.setup_typing();
     }
+
+    pub fn resize(&mut self, height: u16, width: u16) {}
 }
