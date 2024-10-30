@@ -4,14 +4,20 @@ use ratatui::{
     text::{Line, Span, Text},
 };
 
+use rust_embed::Embed;
 use serde::{Deserialize, Serialize};
 use std::{
-    fs,
+    cell::RefCell,
+    rc::Rc,
     sync::OnceLock,
     time::{Duration, Instant},
 };
 
 static LANGUAGE: OnceLock<LanguagePrompt> = OnceLock::new();
+
+#[derive(Embed)]
+#[folder = "src/language/"]
+struct EnglishEmbeded;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 enum LetterState {
@@ -52,11 +58,9 @@ impl LanguagePrompt {
     // once the words are available the caller will
     // want to generate a random subset to call the prompt
     // we will convert the strings into a sequence of characters
-    // TODO
     pub fn generate(&self, word_count: u32) -> Vec<char> {
         let mut rng = rand::thread_rng();
         let uni = Uniform::from(0..self.words.len());
-        // let mut words = vec![];
         let mut chars = vec![];
 
         for _ in 0..word_count {
@@ -67,14 +71,47 @@ impl LanguagePrompt {
             chars.push('•');
         }
 
-        // for each word
-        // push each char
-        // push space at end of word
-        // except last word
         if chars.last().unwrap() == &'•' {
             chars.pop();
         }
         chars
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct PromptSettings {
+    pub wc: u32,
+    pub punctuation: bool,
+    pub capitalization: bool,
+    pub zen: bool,
+}
+
+impl PromptSettings {
+    pub fn new() -> Self {
+        Self {
+            wc: 25,
+            ..Self::default()
+        }
+    }
+
+    pub fn toggle_zen(&mut self) {
+        self.zen = !self.zen;
+    }
+
+    pub fn toggle_punctuation(&mut self) {
+        self.punctuation = !self.punctuation;
+    }
+
+    pub fn toggle_capitalization(&mut self) {
+        self.capitalization = !self.capitalization;
+    }
+
+    pub fn next_wc(&mut self) {
+        if self.wc >= 100 {
+            self.wc = 25;
+            return;
+        }
+        self.wc = self.wc + 25;
     }
 }
 
@@ -91,6 +128,8 @@ pub struct Typing<'a> {
     // materialized text for the UI to display, computed on any new input
     pub text: Text<'a>,
 
+    pub settings: Rc<RefCell<PromptSettings>>,
+
     language: &'a LanguagePrompt,
 
     start_time: Instant,
@@ -98,15 +137,16 @@ pub struct Typing<'a> {
 }
 
 impl<'a> Typing<'a> {
-    pub fn new() -> Self {
+    pub fn new(settings: Option<Rc<RefCell<PromptSettings>>>) -> Self {
         let l = LANGUAGE.get_or_init(|| {
-            let data =
-                fs::read_to_string("./src/language/english_10k.json").expect("issue reading file");
-
-            serde_json::from_str(&data).expect("JSON format error")
+            let file = EnglishEmbeded::get("english_10k.json").unwrap();
+            serde_json::from_str(std::str::from_utf8(file.data.as_ref()).unwrap())
+                .expect("JSON format error")
         });
 
-        let phrase = l.generate(10);
+        let settings = settings.map_or(Rc::new(RefCell::new(PromptSettings::new())), |s| s.clone());
+
+        let phrase = l.generate(settings.borrow().wc);
         let state: Vec<TypingLetter> = Self::setup_state(&phrase);
 
         let text = Self::setup_text(state.clone());
@@ -116,6 +156,7 @@ impl<'a> Typing<'a> {
             phrase: phrase,
             state: state,
             text: text,
+            settings: settings,
             language: l,
             start_time: Instant::now(),
             duration: Duration::default(),
@@ -246,7 +287,7 @@ mod tests {
     use super::*;
     #[test]
     fn test_insert_when_first_of_phrase_is_correct() {
-        let mut t = Typing::new();
+        let mut t = Typing::new(None);
 
         t.input('t');
 
@@ -255,7 +296,7 @@ mod tests {
 
     #[test]
     fn test_insert_when_first_of_phrase_is_incorrect() {
-        let mut t = Typing::new();
+        let mut t = Typing::new(None);
 
         t.input('t');
         t.input('c');
